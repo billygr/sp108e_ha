@@ -2,6 +2,7 @@
 
 This integration is for the SP108E controller
 
+![image](https://user-images.githubusercontent.com/11488067/165465653-a0158222-f9c3-453c-85fc-c78ed07fc507.png)
 
 ### Pending testing
 
