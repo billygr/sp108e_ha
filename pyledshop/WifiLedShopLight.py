@@ -1,5 +1,4 @@
 import socket
-
 from .effects import MONO_EFFECTS, PRESET_EFFECTS
 from .constants import (Command, CommandFlag, MonoEffect)
 from .utils import clamp
@@ -20,6 +19,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 import homeassistant.util.color as color_util
+from time import sleep
 
 class WifiLedShopLight(LightEntity):
   """
@@ -67,6 +67,7 @@ class WifiLedShopLight(LightEntity):
 
     :param brightness: An int describing the brightness (0 to 255, where 255 is the brightest)
     """
+    print('set brightness: ', brightness)
     brightness = clamp(brightness)
     self._state.brightness = brightness
     self.send_command(Command.SET_BRIGHTNESS, [int(brightness)])
@@ -112,30 +113,33 @@ class WifiLedShopLight(LightEntity):
     """
     Toggles the state of the light without checking the current state
     """
-    self._state.is_on = not self._state.is_on
+    initial_state = self._state.is_on
     self.send_command(Command.TOGGLE, [])
+    self.update()
+    while initial_state == self._state.is_on:
+        sleep(0.5)
+        self.toggle()
 
   def turn_on(self, **kwargs):
-    print('turn on: ', kwargs)
 
     if ATTR_BRIGHTNESS in kwargs:
         self.set_brightness(kwargs[ATTR_BRIGHTNESS])
-
-    if ATTR_WHITE_VALUE in kwargs:
-        self.set_white(kwargs[ATTR_WHITE_VALUE])
 
     if ATTR_HS_COLOR in kwargs:
         r,g,b = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
         self.set_color(r, g, b)
 
+    if ATTR_WHITE_VALUE in kwargs:
+        self.set_white(kwargs[ATTR_WHITE_VALUE])
+        return
+
     if ATTR_EFFECT in kwargs:
         self.set_effect(kwargs[ATTR_EFFECT])
 
-    if self._state.is_on:
-        print('already on')
-    else:
+    if not self._state.is_on:
         self.toggle()
-
+    else:
+        print('already on')
 
   def turn_off(self):
     if self._state.is_on:
@@ -176,62 +180,36 @@ class WifiLedShopLight(LightEntity):
 
   def send_command(self, command, data=[]):
     result = None
-    self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self._sock.settimeout(self._timeout)
-    self._sock.connect((self._ip, self._port))
-
     min_data_len = 3
     padded_data = data + [0] * (min_data_len - len(data))
     raw_data = [CommandFlag.START, *padded_data, command, CommandFlag.END]
-    self.send_bytes(raw_data)
-    try:
-        result = self._sock.recv(1024)
-    except (socket.timeout, BrokenPipeError):
-        pass
-
-    self._sock.close()
-    return result
-
-
-  def send_bytes(self, data):
-    """
-    Helper method to send raw bytes directly to the controller
-
-    Mostly for internal use, prefer the specific functions where possible
-    """
-    raw_data = bytes(data)
-
     attempts = 0
     while True:
-      try:
-        self._sock.sendall(raw_data)
-        return
-      except (socket.timeout, BrokenPipeError):
-        print('in socket exeption....')
-        if (attempts < self._retries):
-          attempts += 1
-          self._sock.close()
-          self._sock.connect((self._ip, self._port))
-        else:
-          raise
+        try:
+            self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._sock.settimeout(self._timeout)
+            self._sock.connect((self._ip, self._port))
+            self._sock.sendall(bytes(raw_data))
+            if command == command.GET_ID or command == command.SYNC:
+                result = self._sock.recv(1024)
+
+            self._sock.shutdown(socket.SHUT_RDWR)
+            self._sock.close()
+            self._sock = None
+            return result
+        except (socket.timeout, BrokenPipeError):
+            if (attempts < self._retries):
+                attempts += 1
+                if self._sock:
+                    self._sock.close()
+            else:
+                raise
 
   def update(self):
-    attempts = 0
-    while True:
-      try:
-        # Send the request for sync data
-        response = self.send_command(Command.SYNC, [])
-
-        # Extract the state data
-        state = bytearray(response)
-        self._state.update_from_sync(state)
-        return
-      except (socket.timeout, BrokenPipeError):
-        # When there is an error with the socket, close the connection and connect again
-        if attempts < self._retries:
-          attempts += 1
-        else:
-          raise
+      response = self.send_command(Command.SYNC, [])
+      state = bytearray(response)
+      self._state.update_from_sync(state)
+      return
 
   def __repr__(self):
     return f"""WikiLedShopLight @ {self._ip}:{self._port}
