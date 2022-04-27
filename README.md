@@ -24,4 +24,16 @@ for each controller.
 
 Copy or clone into `<config_dir>/custom_components/sp108e_ws2815/`.
 
-if your upgrading remove old configuration.yaml entry.
+Restart the HA
+
+Following the restart:
+
+Add the following entry in your `configuration.yaml`:
+
+```yaml
+# led strip
+light:
+  - platform: sp108e_ws2815
+    host: ip address, ie: 10.0.1.124
+    name: 'your name here'
+```
