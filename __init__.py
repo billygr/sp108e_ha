@@ -1,4 +1,4 @@
-"""The sp108e_ws2815 integration."""
+"""The sp108e integration."""
 import asyncio
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,12 +12,12 @@ PLATFORMS = ["light"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the sp108e_ws2815 component."""
+    """Set up the sp108e component."""
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up sp108e_ws2815 from a config entry."""
+    """Set up sp108e from a config entry."""
     # TODO Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
     hass.data.setdefault(DOMAIN, {})

@@ -1,3 +1,3 @@
-"""Constants for the sp108e_ws2815 integration."""
+"""Constants for the sp108e integration."""
 
-DOMAIN = "sp108e_ws2815"
+DOMAIN = "sp108e"

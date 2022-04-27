@@ -1,4 +1,4 @@
-"""Config flow for sp108e_ws2815 integration."""
+"""Config flow for sp108e integration."""
 import logging
 
 import voluptuous as vol
@@ -56,7 +56,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for sp108e_ws2815."""
+    """Handle a config flow for sp108e."""
 
     VERSION = 1
     # TODO pick one of the available connection classes in homeassistant/config_entries.py

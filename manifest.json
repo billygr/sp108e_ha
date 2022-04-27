@@ -1,8 +1,8 @@
 {
-  "domain": "sp108e_ws2815",
-  "name": "sp108e_ws2815",
+  "domain": "sp108e",
+  "name": "sp108e",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/sp108e_ws2815",
+  "documentation": "https://www.home-assistant.io/integrations/sp108e",
   "requirements": [],
   "ssdp": [],
   "zeroconf": [],
